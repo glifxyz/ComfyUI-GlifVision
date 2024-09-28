@@ -61,13 +61,20 @@ class GlifVision(nn.Module):
         # seperate out state_dict into different parts
         dv_state_dict = {}
         vision_state_dict = {}
+        max_vision_block_idx = 0
         for k, v in state_dict.items():
             if k.startswith("dvadapter."):
                 dv_state_dict[k[len("dvadapter."):]] = v
             elif k.startswith("vision_encoder."):
                 vision_state_dict[k[len("vision_encoder."):]] = v
+                if "encoder.layers." in k:
+                    block_idx = int(k.split(".")[4])
+                    if block_idx > max_vision_block_idx:
+                        max_vision_block_idx = block_idx 
             else:
                 print(f"Unknown key: {k}")
+        
+        num_vision_blocks = max_vision_block_idx + 1
 
         self.dvadapter: GlifVisionKVPreprocessor = GlifVisionKVPreprocessor(dv_state_dict)
 
@@ -77,6 +84,9 @@ class GlifVision(nn.Module):
             "siglip-base-patch16-512_preprocessor.json"
         )
         siglip_config = SiglipVisionConfig.from_pretrained(siglip_config_path)
+        
+        # Some versions have additional blocks, so we need to update the config
+        siglip_config.num_hidden_layers = num_vision_blocks
 
         self.image_processor = SiglipImageProcessor.from_pretrained(siglip_processor_config_path)
         # self.vision_encoder: SiglipVisionModel = SiglipVisionModel(siglip_config)

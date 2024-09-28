@@ -69,7 +69,6 @@ def double_stream_forward(self, img: Tensor, txt: Tensor, vec: Tensor, pe: Tenso
 
     return img, txt
 
-
 def single_stream_forward(self, x: Tensor, vec: Tensor, pe: Tensor, extra_options=None) -> Tensor:
     mod, _ = self.modulation(vec)
     x_mod = (1 + mod.scale) * self.pre_norm(x) + mod.shift
@@ -91,6 +90,7 @@ def single_stream_forward(self, x: Tensor, vec: Tensor, pe: Tensor, extra_option
         patch_kwargs = self.glif_vision_patch_kwargs
         sigma_start = patch_kwargs['sigma_start']
         sigma_end = patch_kwargs['sigma_end']
+
         if sigma <= sigma_start and sigma >= sigma_end:
             if 'kv' in patch_kwargs and patch_kwargs['kv'] is not None:
                 kv = patch_kwargs['kv']
